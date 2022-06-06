@@ -1,0 +1,7 @@
+github.com/gocarina/gocsv v0.0.0-20220531201732-5f969b02b902 h1:MQpU1uHOSGIbSibiJ246ZUPToUDUT+HBY6Y4lQTVyII=
+github.com/gocarina/gocsv v0.0.0-20220531201732-5f969b02b902/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
+github.com/stevegt/envi v0.2.0 h1:QIaNQz///ueqH/57ldwGQy0yRgaYr/d7JLBQfjg+RXs=
+github.com/stevegt/envi v0.2.0/go.mod h1:Z8w7bE5V9Ce3H02CWNTEYkW3zWE8ulgfROtEt6ydDoY=
+github.com/stevegt/goadapt v0.0.13/go.mod h1:BWNnTsXdIxaseRo0W/MoVgDeLNf+6L4S4fPhyAsBTi0=
+github.com/stevegt/goadapt v0.3.0 h1:wmUhLU7ld6sYeUYBlRkHSJsG9ZkuGCGXDV3pHQVrC7I=
+github.com/stevegt/goadapt v0.3.0/go.mod h1:BWNnTsXdIxaseRo0W/MoVgDeLNf+6L4S4fPhyAsBTi0=
