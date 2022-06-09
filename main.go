@@ -146,7 +146,7 @@ func evs2days(evs []EventBrite) (days map[string][]Gather) {
 	// Pprint(days["June 21 - Making a Change in Health & Science"])
 	// Pprint(allevent)
 
-	Assert(len(days) == 5, len(days))
+	Assert(len(days) == 6, len(days))
 
 	// add all-event people to each day
 	for tt, gs := range days {
@@ -156,6 +156,12 @@ func evs2days(evs []EventBrite) (days map[string][]Gather) {
 		}
 	}
 
+	/*
+		for tt, _ := range days {
+			Pf("\"%s\"\n", tt)
+		}
+	*/
+
 	err = verify(days)
 	Ck(err)
 	return
@@ -164,6 +170,7 @@ func evs2days(evs []EventBrite) (days map[string][]Gather) {
 func verify(days map[string][]Gather) (err error) {
 	defer Return(&err)
 	for tt, gs := range days {
+		// Pl(tt)
 		for _, g := range gs {
 			if g.Role == "All-NOMCON Event Ticket" {
 				continue
