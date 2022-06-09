@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -13,6 +14,17 @@ import (
 
 const csvdir = "/tmp/gatherbot.csv"
 const jsondir = "/tmp/gatherbot.json"
+
+type TicketType string
+
+type Conf struct {
+	Days map[TicketType]ConfDay
+}
+
+type ConfDay struct {
+	SpaceId   string
+	Overwrite bool
+}
 
 type EventBrite struct {
 	OrderID        string `csv:"Order ID"`
@@ -183,6 +195,19 @@ func writeCSVs(days map[string][]Gather) (err error) {
 func writeJSON(days map[string][]Gather) (err error) {
 	err = verify(days)
 	Ck(err)
+
+	conffn := envi.String("GATHERBOT_CONF", ".gatherbot-conf.json")
+	confbuf, err := ioutil.ReadFile(conffn)
+	Ck(err)
+	conf := &Conf{}
+	err = json.Unmarshal(confbuf, conf)
+	Ck(err)
+
+	cmdfn := Spf("%s/cmds.sh", jsondir)
+	cmdfh, err := os.OpenFile(cmdfn, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	Ck(err)
+	defer cmdfh.Close()
+
 	for tt, gs := range days {
 		// Pprint(gs)
 		fn := day2fn(jsondir, tt, "json")
@@ -191,11 +216,18 @@ func writeJSON(days map[string][]Gather) (err error) {
 		Ck(err)
 		defer fh.Close()
 
+		// Pprint(conf)
+		dmap, ok := conf.Days[TicketType(tt)]
+		Assert(ok, tt)
+		spaceId := dmap.SpaceId
+		Assert(spaceId != "")
+		overwrite := dmap.Overwrite
+
 		ggl := make(map[string]GatherGuestDetail)
 		gj := &GatherJSON{
 			ApiKey:    os.Getenv("GATHER_API_KEY"),
-			SpaceId:   os.Getenv("GATHER_SPACE_ID"),
-			Overwrite: envi.Bool("GATHER_OVERWRITE", false),
+			SpaceId:   spaceId,
+			Overwrite: overwrite,
 			Guestlist: ggl,
 		}
 		for _, g := range gs {
@@ -209,7 +241,18 @@ func writeJSON(days map[string][]Gather) (err error) {
 		Ck(err)
 		_, err = fh.Write(buf)
 		Ck(err)
+
+		if spaceId != "XXX" {
+			// append curl command to cmds file
+			// curl -i -H "Content-Type: application/json" --data @$dir/$dayfn 'https://api.gather.town/api/setEmailGuestlist'
+			cmdtmpl := `curl -i -H "Content-Type: application/json" --data @%s 'https://api.gather.town/api/setEmailGuestlist'`
+			cmd := Spf(cmdtmpl, fn)
+			cmd = Spf("%s\n", cmd)
+			cmdfh.Write([]byte(cmd))
+		}
+
 	}
+
 	return
 }
 

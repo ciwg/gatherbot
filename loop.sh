@@ -1,9 +1,12 @@
 #!/bin/bash
 
-day=$1
+set -x
 
 while true
 do 
-    ./sync.sh $day
+    if ! ./sync.sh 
+    then
+        sleep 1800
+    fi
     sleep 300
 done
