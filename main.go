@@ -32,6 +32,7 @@ type EventBrite struct {
 	AttendeeStatus string `csv:"Attendee Status"`
 	Name           string `csv:"Name"`
 	Email          string `csv:"Email"`
+	PlatformEmail  string `csv:"PlatformEmail"`
 	EventName      string `csv:"Event Name"`
 	TicketQuantity string `csv:"Ticket Quantity"`
 	TicketType     string `csv:"Ticket Type"`
@@ -102,10 +103,12 @@ func getEvs() (evs []EventBrite, err error) {
 	// Pprint(attendees)
 	// os.Exit(1)
 	for _, a := range attendees {
+
 		ev := EventBrite{
-			Name:       a.Name,
-			Email:      a.Email,
-			TicketType: a.TicketType,
+			Name:          a.Name,
+			Email:         a.Email,
+			PlatformEmail: a.PlatformEmail,
+			TicketType:    a.TicketType,
 		}
 		evs = append(evs, ev)
 	}
@@ -128,16 +131,23 @@ func evs2days(evs []EventBrite) (days map[string][]Gather) {
 	days = make(map[string][]Gather)
 	var allevent []Gather
 	for _, ev := range evs {
-		g := Gather{
-			Email: ev.Email,
-			Name:  ev.Name,
-			Role:  ev.TicketType,
-			// Affiliation:
+		var emails []string
+		emails = append(emails, ev.Email)
+		if ev.PlatformEmail != "" && ev.PlatformEmail != ev.Email {
+			emails = append(emails, ev.PlatformEmail)
 		}
-		if ev.TicketType == "All-NOMCON Event Ticket" {
-			allevent = append(allevent, g)
-		} else {
-			days[ev.TicketType] = append(days[ev.TicketType], g)
+		for _, email := range emails {
+			g := Gather{
+				Email: email,
+				Name:  ev.Name,
+				Role:  ev.TicketType,
+				// Affiliation:
+			}
+			if ev.TicketType == "All-NOMCON Event Ticket" {
+				allevent = append(allevent, g)
+			} else {
+				days[ev.TicketType] = append(days[ev.TicketType], g)
+			}
 		}
 	}
 	err := verify(days)
@@ -146,7 +156,7 @@ func evs2days(evs []EventBrite) (days map[string][]Gather) {
 	// Pprint(days["June 21 - Making a Change in Health & Science"])
 	// Pprint(allevent)
 
-	Assert(len(days) == 6, len(days))
+	// Assert(len(days) == 6, len(days))
 
 	// add all-event people to each day
 	for tt, gs := range days {

@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	. "github.com/stevegt/goadapt"
@@ -29,9 +30,18 @@ var netClient = &http.Client{
 }
 
 type Attendee struct {
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	TicketType string `json:"ticket_class_name"`
+	Name          string `json:"name"`
+	Email         string `json:"email"`
+	PlatformEmail string
+	TicketType    string `json:"ticket_class_name"`
+	Answers       []Answer
+}
+
+type Answer struct {
+	Question   string
+	QuestionId string `json:"question_id"`
+	Type       string
+	Answer     string
 }
 
 // AttendeeProfile -
@@ -140,15 +150,34 @@ func fetchPage(eventID int, authToken string, page int) (attendees []Attendee, h
 		// Pl(string(data.Attendees[i]))
 		profile, err2 := getProfile(data.Attendees[i])
 		if err2 != nil {
-			return nil, false, err
+			return nil, false, err2
 		}
+
+		/*
+			billing, err2 := getBilling(data.Attendees[i])
+			if err2 != nil {
+				return nil, false, err2
+			}
+			_ = billing
+		*/
+
+		// Pprint(data.Attendees[i])
 
 		attendee := &Attendee{}
 		err := json.Unmarshal(data.Attendees[i], attendee)
 		Ck(err)
 
 		attendee.Name = profile.Name
-		attendee.Email = profile.Email
+		attendee.Email = strings.TrimSpace(profile.Email)
+
+		for _, ans := range attendee.Answers {
+			// "Attendee Email Address (this will be how you login to our platform, so please give us the email you intend to use for login)"
+			if ans.QuestionId == "76109979" {
+				attendee.PlatformEmail = strings.TrimSpace(ans.Answer)
+			}
+		}
+
+		// Pprint(attendee)
 
 		attendees[i] = *attendee
 	}
@@ -157,6 +186,17 @@ func fetchPage(eventID int, authToken string, page int) (attendees []Attendee, h
 	err = nil
 
 	return attendees, hasMore, err
+}
+
+func getBilling(body json.RawMessage) (*AttendeeProfile, error) {
+	/** Parse the entire attendee body **/
+	var jsonResp map[string]json.RawMessage
+	if err := json.Unmarshal(body, &jsonResp); err != nil {
+		err = fmt.Errorf("parsing eventbrite attendee: %s", err)
+		return nil, err
+	}
+	// Pprint(jsonResp)
+	return nil, nil
 }
 
 func getProfile(body json.RawMessage) (*AttendeeProfile, error) {
