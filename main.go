@@ -235,7 +235,10 @@ func writeJSON(days map[string][]Gather) (err error) {
 
 		// Pprint(conf)
 		dmap, ok := conf.Days[TicketType(tt)]
-		Assert(ok, tt)
+		if !ok {
+			Pl("UNKNOWN TICKET TYPE", tt)
+			continue
+		}
 		spaceId := dmap.SpaceId
 		Assert(spaceId != "")
 		overwrite := dmap.Overwrite
